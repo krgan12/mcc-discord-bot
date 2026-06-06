@@ -74,11 +74,10 @@ class Client(discord.Client):
             member_count = sum(1 for m in guild.members if member_role in m.roles) #len(member_role.members)
 
             channels = {
-                ALL_MEMBERS_CHANNEL: f"All Members: {total_members}",
+                ALL_MEMBERS_CHANNEL: f"All Members: {member_count}",
                 EXECUTIVE_CHANNEL: f"Executives: {executive_count}",
                 VP_CHANNEL: f"Vice Presidents: {vp_count}",
                 VIP_CHANNEL: f"VIP: {vip_count}",
-                MEMBERS_CHANNEL: f"Members: {member_count}",
                 BOTS_CHANNEL: f"Bots: {bot_count}"
             }
 
@@ -129,12 +128,19 @@ class Client(discord.Client):
 
     async def on_member_join(self, member):
 
+        print(f"{member} joined!")
+
         inviter = await self.get_inviter(member)
 
         log_channel = member.guild.get_channel(int(os.getenv("LOG_CHANNEL_ID")))
 
         if inviter:
             source = inviter.mention
+
+            guild_lb = self.invite_leaderboard.setdefault(member.guild.id, {})
+
+            guild_lb[inviter.id] = guild_lb.get(inviter.id, 0) + 1
+
         else:
             source = "Unknown / Website"
 
