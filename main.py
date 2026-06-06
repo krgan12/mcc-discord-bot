@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import traceback
 import asyncio
 import time
+import aiohttp
 
 load_dotenv()
 
@@ -13,6 +14,8 @@ VP_CHANNEL = int(os.getenv("VP_CHANNEL"))
 VIP_CHANNEL = int(os.getenv("VIP_CHANNEL"))
 MEMBERS_CHANNEL = int(os.getenv("MEMBERS_CHANNEL"))
 BOTS_CHANNEL = int(os.getenv("BOTS_CHANNEL"))
+
+WEBSITE_URL = "https://mcc-site-virid.vercel.app/" # Adjustable
 
 class Client(discord.Client):
 
@@ -26,16 +29,6 @@ class Client(discord.Client):
         print("ERROR IN EVENT: ", event)
         traceback.print_exc()
 
-    # async def stats_loop(self):
-
-    #     await self.wait_until_ready()
-
-    #     while not self.is_closed():
-    #         for guild in self.guilds:
-    #             await self.update_server_stats(guild)
-
-    #         await asyncio.sleep(60) # Every 60 seconds
-    
     async def on_ready(self):
         
         for guild in self.guilds:
@@ -160,6 +153,39 @@ class Client(discord.Client):
         )
 
         await self.update_server_stats(member.guild)
+
+    async def on_message(self, message):
+
+        if message.author.bot:
+            return
+        
+        if message.content.lower() == "!status":
+
+            url = WEBSITE_URL
+
+            try:
+                start = time.perf_counter()
+
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(url) as response:
+
+                        elapsed_ms = (time.perf_counter() - start) * 1000
+
+                        status = response.status
+
+                        emoji = "✅" if 200 <= status < 400 else "❌"
+
+                        await message.channel.send(
+                            f"{emoji} **Status:** {status};  "
+                            f"🌐 **URL:** {url};  "
+                            f"⏱️ **Response Time:** {elapsed_ms:.2f} ms"
+                        )
+
+            except Exception as e:
+                await message.channel.send(
+                    f"❌ Could not reach: `{url}`.  "
+                    f"Error: {e}"
+                )
 
 intents = discord.Intents.default()
 intents.message_content = True
