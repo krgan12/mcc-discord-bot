@@ -176,7 +176,7 @@ class Client(discord.Client):
                         emoji = "✅ OK" if 200 <= status < 400 else "❌"
 
                         await message.channel.send(
-                            f"**Response::** {status} {emoji};  "
+                            f"**Response:** {status} {emoji};  "
                             f"🌐 **URL:** {url};  "
                             f"⏱️ **Response Time:** {elapsed_ms:.2f} ms"
                         )
