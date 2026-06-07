@@ -151,7 +151,8 @@ class Client(discord.Client):
         # Welcome message 
         if welcome_channel:
             await welcome_channel.send(
-                f"Hello {member.mention} 👋, welcome to the Mobile Computing Club and thank you for joining!"
+                content=f"Hello {member.mention} 👋, welcome to the Mobile Computing Club and thank you for joining!",
+                allowed_mentions=discord.AllowedMentions(users=True)
             )
 
         await self.update_server_stats(member.guild)
