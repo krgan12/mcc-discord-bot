@@ -1,0 +1,10 @@
+discord
+os
+dotenv 
+load_dotenv
+traceback
+asyncio
+time
+aiohttp
+discord.ext 
+tasks
