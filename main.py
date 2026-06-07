@@ -23,8 +23,12 @@ class Client(discord.Client):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.invites = {}
+        self.invite_leaderboard= {}
         self.update_lock = asyncio.Lock()
         self.last_update = 0
+
+    async def setup_hook(self):
+         self.stats_updater.start()
 
     def on_error(self, event, *args, **kwargs):
         print("ERROR IN EVENT: ", event)
@@ -39,7 +43,7 @@ class Client(discord.Client):
                 for invite in await guild.invites()
             }
                 
-        print(f"Logged on as {self.user}!")
+        print(f"Logged in as {self.user}!")
 
     async def update_server_stats(self, guild):
         
@@ -47,8 +51,8 @@ class Client(discord.Client):
 
             now = time.time()
 
-            # prevents spam (10 second cooldown)
-            if now - self.last_update < 30:
+            # prevents spam (30 second cooldown)
+            if now - self.last_update < 65:
                 return
             
             self.last_update = now
@@ -127,9 +131,10 @@ class Client(discord.Client):
         inviter = await self.get_inviter(member)
 
         log_channel = member.guild.get_channel(int(os.getenv("LOG_CHANNEL_ID")))
+        welcome_channel = member.guild.get_channel(int(os.getenv("WELCOME_CHANNEL_ID")))
 
         if inviter:
-            source = inviter.mention
+            source = inviter.name #inviter.mention
 
             guild_lb = self.invite_leaderboard.setdefault(member.guild.id, {})
 
@@ -142,6 +147,12 @@ class Client(discord.Client):
             f"🎉 {member.name} is member #{member.guild.member_count}!\n"
             f"Invited by: {source}"
         )
+
+        # Welcome message 
+        if welcome_channel:
+            await welcome_channel.send(
+                f"Hello {member.mention} 👋, welcome to the Mobile Computing Club and thank you for joining!"
+            )
 
         await self.update_server_stats(member.guild)
 
@@ -187,6 +198,16 @@ class Client(discord.Client):
                     f"❌ Could not reach: `{url}`.  "
                     f"Error: {e}"
                 )
+
+    @tasks.loop(hours=24 * 3)
+    async def stats_updater(self):
+        
+        for guild in self.guilds:
+            await self.update_server_stats(guild)
+
+    @stats_updater.before_loop
+    async def before_stats_updater(self):
+        await self.wait_until_ready()
 
 intents = discord.Intents.default()
 intents.message_content = True
