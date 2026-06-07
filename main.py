@@ -5,6 +5,7 @@ import traceback
 import asyncio
 import time
 import aiohttp
+from discord.ext import tasks
 
 load_dotenv()
 
@@ -153,6 +154,7 @@ class Client(discord.Client):
         )
 
         await self.update_server_stats(member.guild)
+    
 
     async def on_message(self, message):
 
@@ -180,7 +182,6 @@ class Client(discord.Client):
                             f"🌐 **URL:** {url};  "
                             f"⏱️ **Response Time:** {elapsed_ms:.2f} ms"
                         )
-
             except Exception as e:
                 await message.channel.send(
                     f"❌ Could not reach: `{url}`.  "
